@@ -1,740 +1,248 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101820">
-  <title>Teste de áudio e reconhecimento de fala</title>
+  <title>Legendas traduzidas</title>
   <style>
-    :root {
-      color-scheme: dark;
-      --bg: #0d141b;
-      --panel: #17212b;
-      --border: #2a3947;
-      --muted: #b8c4cf;
-      --accent: #72d6a1;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      color: #f1f5f9;
-      font: 16px/1.5 Arial, sans-serif;
-    }
-
-    main {
-      width: min(850px, calc(100% - 28px));
-      margin: 24px auto;
-      padding-bottom: 30px;
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: clamp(24px, 5vw, 32px);
-      line-height: 1.2;
-    }
-
-    h2 {
-      margin: 0 0 12px;
-      font-size: 19px;
-    }
-
-    p {
-      margin: 8px 0;
-    }
-
-    .intro,
-    .note {
-      color: var(--muted);
-    }
-
-    .panel {
-      margin-top: 16px;
-      padding: 18px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-    }
-
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: end;
-      gap: 10px;
-    }
-
-    label {
-      display: grid;
-      flex: 1 1 220px;
-      gap: 6px;
-      color: #cbd5df;
-      font-size: 14px;
-    }
-
-    select,
-    button {
-      min-height: 44px;
-      border: 1px solid #425363;
-      border-radius: 8px;
-      background: #101820;
-      color: #f1f5f9;
-      padding: 9px 12px;
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-      font-weight: 700;
-      touch-action: manipulation;
-    }
-
-    button:disabled {
-      opacity: 0.48;
-      cursor: not-allowed;
-    }
-
-    button.primary {
-      color: #102018;
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    .status {
-      min-height: 26px;
-      margin: 12px 0 0;
-      color: #d6e0e8;
-      font-size: 14px;
-    }
-
-    .transcript {
-      min-height: 150px;
-      max-height: 48vh;
-      overflow-y: auto;
-      margin-top: 14px;
-      padding: 14px;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      background: #0b1117;
-      border: 1px solid #334452;
-      border-radius: 9px;
-    }
-
-    .interim {
-      color: #aab7c3;
-      font-style: italic;
-    }
-
-    .meter {
-      height: 14px;
-      overflow: hidden;
-      margin: 14px 0 6px;
-      border-radius: 9px;
-      background: #344250;
-    }
-
-    .meter-fill {
-      width: 0;
-      height: 100%;
-      background: var(--accent);
-      transition: width 0.07s linear;
-    }
-
-    .meter-label {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .note {
-      font-size: 13px;
-    }
-
-    @media (max-width: 560px) {
-      main {
-        margin-top: 16px;
-      }
-
-      .panel {
-        padding: 14px;
-      }
-
-      .row button {
-        flex: 1 1 42%;
-      }
-    }
+    :root { color-scheme: dark; --bg:#0d141b; --panel:#17212b; --text:#f3f6f8;
+      --muted:#aebbc7; --accent:#54a6ff; --danger:#ff6b6b;
+      --sub-color:#ffffff; --sub-size:30px; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; padding:20px; color:var(--text);
+      background:var(--bg); font-family:Arial,Helvetica,sans-serif; }
+    main { width:min(760px,100%); margin:0 auto; }
+    h1 { margin:0 0 8px; font-size:1.6rem; }
+    .panel { margin:14px 0; padding:16px; border:1px solid #30404e;
+      border-radius:12px; background:var(--panel); }
+    .controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    label { display:block; margin-bottom:7px; font-weight:700; }
+    select, input, button { font:inherit; }
+    select, input[type="number"] { width:100%; min-height:42px; padding:8px 10px;
+      border:1px solid #526474; border-radius:8px; color:var(--text); background:#101820; }
+    input[type="color"] { width:100%; height:42px; padding:4px;
+      border:1px solid #526474; border-radius:8px; background:#101820; }
+    .buttons { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+    button { min-height:44px; padding:10px 16px; border:0; border-radius:8px;
+      color:#07111a; background:var(--accent); font-weight:700; cursor:pointer; }
+    button.secondary { color:var(--text); background:#394957; }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    #status { min-height:24px; margin-top:14px; color:var(--muted); line-height:1.45; }
+    #status.error { color:var(--danger); }
+    .stage { min-height:230px; display:flex; justify-content:center; padding:20px;
+      border:1px solid #30404e; border-radius:12px;
+      background:radial-gradient(ellipse at center,#273441 0%,#121b24 72%); }
+    .stage.position-top { align-items:flex-start; }
+    .stage.position-center { align-items:center; }
+    .stage.position-bottom { align-items:flex-end; }
+    .box { width:100%; text-align:center; }
+    #translated { color:var(--sub-color); font-size:var(--sub-size); font-weight:700;
+      line-height:1.3; overflow-wrap:anywhere; text-shadow:0 2px 4px #000; }
+    #original { margin-top:10px; color:#d4dde5; font-size:.9rem; overflow-wrap:anywhere; }
+    #interim { min-height:24px; margin-top:12px; color:#b8c4ce; font-style:italic; }
+    .small { color:var(--muted); font-size:.85rem; }
+    @media (max-width:560px) { .controls { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Teste de áudio e reconhecimento</h1>
-    <p class="intro">
-      Use esta página publicada no GitHub Pages, perto da TV e em primeiro plano.
-      Os dois testes abaixo funcionam separadamente: assim, o medidor não abre
-      o microfone ao mesmo tempo que o reconhecimento de fala.
-    </p>
+<main>
+  <h1>Legendas traduzidas</h1>
 
-    <section class="panel" aria-labelledby="recognitionHeading">
-      <h2 id="recognitionHeading">1. Testar reconhecimento de fala</h2>
-
-      <div class="row">
-        <label for="language">
-          Idioma falado
-          <select id="language">
-            <option value="en-US">Inglês</option>
-            <option value="es-ES">Espanhol</option>
-            <option value="de-DE">Alemão</option>
-            <option value="zh-CN">Mandarim (simplificado)</option>
-            <option value="zh-TW">Mandarim (tradicional)</option>
-            <option value="pt-BR">Português</option>
-            <option value="fr-FR">Francês</option>
-            <option value="it-IT">Italiano</option>
-            <option value="ja-JP">Japonês</option>
-            <option value="ko-KR">Coreano</option>
-            <option value="ru-RU">Russo</option>
-          </select>
-        </label>
-
-        <button id="startRecognition" class="primary" type="button">
-          Iniciar reconhecimento
-        </button>
-        <button id="pauseRecognition" type="button" disabled>Pausar</button>
-        <button id="stopRecognition" type="button" disabled>Parar</button>
-        <button id="clearText" type="button">Limpar texto</button>
+  <section class="panel">
+    <div class="controls">
+      <div>
+        <label for="language">Idioma falado</label>
+        <select id="language">
+          <option value="en-US">Inglês</option>
+          <option value="es-ES">Espanhol</option>
+          <option value="ja-JP">Japonês</option>
+        </select>
       </div>
-
-      <p id="recognitionStatus" class="status" role="status" aria-live="polite">
-        Pronto. Escolha o idioma e inicie o reconhecimento.
-      </p>
-
-      <div
-        id="transcript"
-        class="transcript"
-        aria-live="polite"
-        aria-label="Texto reconhecido"
-      ></div>
-
-      <p class="note">
-        O texto é apenas transcrito nesta página: este teste não traduz,
-        não grava memória e não usa o Code.gs.
-      </p>
-    </section>
-
-    <section class="panel" aria-labelledby="meterHeading">
-      <h2 id="meterHeading">2. Testar se o microfone capta o som da TV</h2>
-
-      <div class="row">
-        <button id="startMeter" class="primary" type="button">
-          Testar microfone
-        </button>
-        <button id="stopMeter" type="button" disabled>
-          Parar teste do microfone
-        </button>
+      <div>
+        <label for="color">Cor da legenda</label>
+        <input id="color" type="color" value="#ffffff">
       </div>
-
-      <p id="meterStatus" class="status" role="status" aria-live="polite">
-        Este teste está desligado. Ele não roda junto com o reconhecimento.
-      </p>
-
-      <div
-        class="meter"
-        role="meter"
-        aria-label="Nível de som captado"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        aria-valuenow="0"
-      >
-        <div id="meterFill" class="meter-fill"></div>
+      <div>
+        <label for="size">Tamanho: <span id="sizeValue">30</span> px</label>
+        <input id="size" type="number" min="16" max="60" value="30">
       </div>
-
-      <p class="meter-label">
-        Fale ou aumente o volume da TV para observar a barra. Depois pare o teste
-        antes de iniciar o reconhecimento.
-      </p>
-    </section>
-
-    <p class="note">
-      <strong>Privacidade e compatibilidade:</strong> o medidor acessa o
-      microfone diretamente e mostra somente o nível do som, sem gravar áudio.
-      O reconhecimento depende do suporte do navegador e de internet; dependendo
-      do navegador, o áudio pode ser enviado ao serviço de reconhecimento dele.
-      Este protótipo não envia o texto a um servidor próprio. Se o navegador não
-      suportar a função, uma mensagem de erro será mostrada aqui.
-    </p>
-  </main>
-
-  <script>
-    (() => {
-      'use strict';
-
-      const RecognitionAPI =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      const languageSelect = document.getElementById('language');
-      const transcript = document.getElementById('transcript');
-      const recognitionStatus =
-        document.getElementById('recognitionStatus');
-      const startRecognitionButton =
-        document.getElementById('startRecognition');
-      const pauseRecognitionButton =
-        document.getElementById('pauseRecognition');
-      const stopRecognitionButton =
-        document.getElementById('stopRecognition');
-      const startMeterButton = document.getElementById('startMeter');
-      const stopMeterButton = document.getElementById('stopMeter');
-      const meterStatus = document.getElementById('meterStatus');
-      const meterFill = document.getElementById('meterFill');
-      const meterElement = document.querySelector('[role="meter"]');
-
-      let recognition = null;
-      let recognitionState = 'stopped';
-      let recognitionSession = 0;
-      let restartTimer = null;
-      let finalTranscript = '';
-      let interimTranscript = '';
-
-      let micStream = null;
-      let audioContext = null;
-      let analyser = null;
-      let animationFrame = null;
-
-      function setRecognitionStatus(message) {
-        recognitionStatus.textContent = message;
-      }
-
-      function updateRecognitionButtons() {
-        const running =
-          recognitionState === 'listening' ||
-          recognitionState === 'paused';
-
-        startRecognitionButton.disabled = running || Boolean(micStream);
-        pauseRecognitionButton.disabled = !running;
-        stopRecognitionButton.disabled = !running;
-
-        pauseRecognitionButton.textContent =
-          recognitionState === 'paused' ? 'Continuar' : 'Pausar';
-      }
-
-      function renderTranscript() {
-        transcript.replaceChildren();
-
-        if (finalTranscript) {
-          transcript.append(
-            document.createTextNode(
-              finalTranscript + (interimTranscript ? ' ' : '')
-            )
-          );
-        }
-
-        if (interimTranscript) {
-          const interim = document.createElement('span');
-          interim.className = 'interim';
-          interim.textContent = interimTranscript;
-          transcript.append(interim);
-        }
-
-        transcript.scrollTop = transcript.scrollHeight;
-      }
-
-      function beginRecognition() {
-        if (micStream) {
-          setRecognitionStatus(
-            'Pare primeiro o teste do microfone; os dois testes não devem rodar juntos.'
-          );
-          return;
-        }
-
-        if (!RecognitionAPI) {
-          setRecognitionStatus(
-            'Este navegador não oferece a Web Speech API. Tente o Chrome atualizado; se continuar, o navegador ou aparelho pode não ser compatível.'
-          );
-          return;
-        }
-
-        if (!window.isSecureContext) {
-          setRecognitionStatus(
-            'É necessário abrir o endereço HTTPS publicado pelo GitHub Pages, não um arquivo local.'
-          );
-          return;
-        }
-
-        const session = ++recognitionSession;
-        recognitionState = 'listening';
-        updateRecognitionButtons();
-
-        setRecognitionStatus(
-          'Iniciando o reconhecimento. Se o navegador pedir acesso ao microfone, escolha Permitir.'
-        );
-
-        startRecognitionInstance(session);
-      }
-
-      function startRecognitionInstance(session) {
-        if (
-          session !== recognitionSession ||
-          recognitionState !== 'listening' ||
-          micStream
-        ) {
-          return;
-        }
-
-        let instance;
-
-        try {
-          instance = new RecognitionAPI();
-          recognition = instance;
-          instance.lang = languageSelect.value;
-          instance.continuous = true;
-          instance.interimResults = true;
-          instance.maxAlternatives = 1;
-
-          instance.onstart = () => {
-            if (
-              session === recognitionSession &&
-              recognitionState === 'listening'
-            ) {
-              setRecognitionStatus(
-                'Ouvindo. Fale perto do aparelho ou deixe a TV reproduzir diálogo.'
-              );
-            }
-          };
-
-          instance.onresult = (event) => {
-            if (
-              session !== recognitionSession ||
-              recognitionState !== 'listening'
-            ) {
-              return;
-            }
-
-            interimTranscript = '';
-
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-              const text = event.results[i][0].transcript.trim();
-              if (!text) continue;
-
-              if (event.results[i].isFinal) {
-                finalTranscript +=
-                  (finalTranscript ? ' ' : '') + text;
-              } else {
-                interimTranscript +=
-                  (interimTranscript ? ' ' : '') + text;
-              }
-            }
-
-            renderTranscript();
-
-            if (finalTranscript || interimTranscript) {
-              setRecognitionStatus(
-                'Recebendo fala. O texto cinza é provisório; o texto normal foi finalizado.'
-              );
-            }
-          };
-
-          instance.onerror = (event) => {
-            if (session !== recognitionSession) return;
-
-            const errors = {
-              'not-allowed':
-                'A permissão de microfone ou reconhecimento foi bloqueada. Confira as permissões do site e do navegador.',
-              'service-not-allowed':
-                'O navegador bloqueou o serviço de reconhecimento de fala.',
-              'audio-capture':
-                'O navegador não conseguiu acessar um microfone.',
-              network:
-                'O reconhecimento falhou por problema de rede. Confira a conexão.',
-              'no-speech':
-                'Nenhuma fala foi detectada. Verifique o volume da TV, a distância e o idioma escolhido.',
-              'language-not-supported':
-                'Este navegador não oferece reconhecimento para o idioma escolhido.'
-            };
-
-            setRecognitionStatus(
-              errors[event.error] ||
-                ('Erro no reconhecimento: ' + event.error + '.')
-            );
-
-            if (
-              [
-                'not-allowed',
-                'service-not-allowed',
-                'audio-capture',
-                'language-not-supported'
-              ].includes(event.error)
-            ) {
-              recognitionState = 'stopped';
-              recognitionSession++;
-              recognition = null;
-              clearTimeout(restartTimer);
-              updateRecognitionButtons();
-            }
-          };
-
-          instance.onend = () => {
-            if (
-              recognition !== instance ||
-              session !== recognitionSession
-            ) {
-              return;
-            }
-
-            recognition = null;
-
-            if (recognitionState === 'listening') {
-              clearTimeout(restartTimer);
-              restartTimer = setTimeout(
-                () => startRecognitionInstance(session),
-                400
-              );
-            } else if (recognitionState === 'stopped') {
-              updateRecognitionButtons();
-            }
-          };
-
-          instance.start();
-        } catch (error) {
-          if (session === recognitionSession) {
-            recognition = null;
-            recognitionState = 'stopped';
-            updateRecognitionButtons();
-            setRecognitionStatus(
-              'Não foi possível iniciar o reconhecimento. Aguarde, confira a permissão e tente de novo.'
-            );
-          }
-        }
-      }
-
-      function pauseRecognition() {
-        if (recognitionState === 'listening') {
-          recognitionState = 'paused';
-          clearTimeout(restartTimer);
-
-          const oldRecognition = recognition;
-          recognition = null;
-
-          if (oldRecognition) {
-            oldRecognition.onend = null;
-            try {
-              oldRecognition.stop();
-            } catch (error) {
-              // O reconhecimento pode já ter terminado.
-            }
-          }
-
-          interimTranscript = '';
-          renderTranscript();
-          setRecognitionStatus(
-            'Reconhecimento pausado. Toque em Continuar para retomar.'
-          );
-        } else if (recognitionState === 'paused') {
-          recognitionState = 'listening';
-          setRecognitionStatus('Retomando o reconhecimento…');
-          startRecognitionInstance(recognitionSession);
-        }
-
-        updateRecognitionButtons();
-      }
-
-      function stopRecognition() {
-        if (recognitionState === 'stopped') return;
-
-        recognitionState = 'stopped';
-        recognitionSession++;
-        clearTimeout(restartTimer);
-
-        const oldRecognition = recognition;
-        recognition = null;
-
-        if (oldRecognition) {
-          oldRecognition.onend = null;
-          try {
-            oldRecognition.abort();
-          } catch (error) {
-            try {
-              oldRecognition.stop();
-            } catch (ignored) {
-              // O reconhecimento pode já ter terminado.
-            }
-          }
-        }
-
-        interimTranscript = '';
-        renderTranscript();
-        setRecognitionStatus(
-          'Reconhecimento parado. O texto final continua visível.'
-        );
-        updateRecognitionButtons();
-      }
-
-      function stopMeter(message) {
-        if (animationFrame) {
-          cancelAnimationFrame(animationFrame);
-        }
-
-        animationFrame = null;
-        analyser = null;
-
-        if (audioContext) {
-          try {
-            audioContext.close();
-          } catch (error) {
-            // O contexto pode já estar fechado.
-          }
-          audioContext = null;
-        }
-
-        if (micStream) {
-          micStream.getTracks().forEach((track) => track.stop());
-        }
-
-        micStream = null;
-        meterFill.style.width = '0%';
-        meterElement.setAttribute('aria-valuenow', '0');
-        startMeterButton.disabled = false;
-        stopMeterButton.disabled = true;
-        updateRecognitionButtons();
-
-        if (message) {
-          meterStatus.textContent = message;
-        }
-      }
-
-      async function startMeter() {
-        if (recognitionState !== 'stopped') {
-          meterStatus.textContent =
-            'Pare o reconhecimento antes de testar o medidor; os modos são separados.';
-          return;
-        }
-
-        if (
-          !window.isSecureContext ||
-          !navigator.mediaDevices ||
-          !navigator.mediaDevices.getUserMedia
-        ) {
-          meterStatus.textContent =
-            'O medidor exige HTTPS e suporte do navegador. Abra a página publicada pelo GitHub Pages.';
-          return;
-        }
-
-        startMeterButton.disabled = true;
-        meterStatus.textContent =
-          'Solicitando permissão do microfone… escolha Permitir.';
-
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-              echoCancellation: false,
-              noiseSuppression: false,
-              autoGainControl: true
-            },
-            video: false
-          });
-
-          if (recognitionState !== 'stopped') {
-            stream.getTracks().forEach((track) => track.stop());
-            stopMeter(
-              'O reconhecimento começou; o teste do medidor foi cancelado.'
-            );
-            return;
-          }
-
-          micStream = stream;
-
-          const AudioContextClass =
-            window.AudioContext || window.webkitAudioContext;
-
-          if (!AudioContextClass) {
-            stopMeter(
-              'Microfone autorizado, mas este navegador não oferece o medidor visual de áudio.'
-            );
-            return;
-          }
-
-          audioContext = new AudioContextClass();
-          const source = audioContext.createMediaStreamSource(stream);
-          analyser = audioContext.createAnalyser();
-          analyser.fftSize = 512;
-          source.connect(analyser);
-
-          const samples = new Uint8Array(analyser.fftSize);
-
-          startMeterButton.disabled = true;
-          stopMeterButton.disabled = false;
-          meterStatus.textContent =
-            'Microfone ativo. Observe se a barra reage à fala ou ao som da TV.';
-
-          const draw = () => {
-            if (!analyser) return;
-
-            analyser.getByteTimeDomainData(samples);
-
-            let sum = 0;
-            for (let i = 0; i < samples.length; i++) {
-              const sample = (samples[i] - 128) / 128;
-              sum += sample * sample;
-            }
-
-            const level = Math.min(
-              100,
-              Math.round(Math.sqrt(sum / samples.length) * 350)
-            );
-
-            meterFill.style.width = level + '%';
-            meterElement.setAttribute('aria-valuenow', String(level));
-            animationFrame = requestAnimationFrame(draw);
-          };
-
-          draw();
-        } catch (error) {
-          let message;
-
-          if (error && error.name === 'NotAllowedError') {
-            message =
-              'Permissão negada. Libere o microfone nas permissões do site e do sistema.';
-          } else if (error && error.name === 'NotFoundError') {
-            message =
-              'Nenhum microfone foi encontrado. Confira as configurações do aparelho.';
-          } else {
-            message =
-              'Não foi possível abrir o microfone. Confira a permissão e tente novamente.';
-          }
-
-          stopMeter(message);
-        }
-      }
-
-      startRecognitionButton.addEventListener(
-        'click',
-        beginRecognition
-      );
-      pauseRecognitionButton.addEventListener(
-        'click',
-        pauseRecognition
-      );
-      stopRecognitionButton.addEventListener(
-        'click',
-        stopRecognition
-      );
-
-      document
-        .getElementById('clearText')
-        .addEventListener('click', () => {
-          finalTranscript = '';
-          interimTranscript = '';
-          renderTranscript();
-          setRecognitionStatus('Texto apagado.');
+      <div>
+        <label for="position">Posição</label>
+        <select id="position">
+          <option value="bottom">Embaixo</option>
+          <option value="center">No meio</option>
+          <option value="top">Em cima</option>
+        </select>
+      </div>
+      <div>
+        <label for="delay">Atraso da legenda (ms)</label>
+        <input id="delay" type="number" min="0" max="10000" step="250" value="0">
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button id="start" type="button">Iniciar microfone</button>
+      <button id="stop" class="secondary" type="button" disabled>Parar</button>
+      <button id="clear" class="secondary" type="button">Limpar</button>
+    </div>
+    <div id="status" role="status" aria-live="polite">Pronto. Clique em Iniciar microfone.</div>
+  </section>
+
+  <section id="stage" class="stage position-bottom">
+    <div class="box">
+      <div id="translated" aria-live="polite">A tradução aparecerá aqui.</div>
+      <div id="original"></div>
+      <div id="interim"></div>
+    </div>
+  </section>
+
+  <p class="small">Precisa de internet. Mantenha esta página em primeiro plano.</p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  const API_URL = 'COLE_AQUI_O_ENDERECO_EXEC';
+
+  const $ = function (id) { return document.getElementById(id); };
+  const langSel = $('language'), startBtn = $('start'), stopBtn = $('stop');
+  const statusBox = $('status'), translatedBox = $('translated');
+  const originalBox = $('original'), interimBox = $('interim');
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null, listening = false, restartTimer = null;
+  let queue = Promise.resolve(), displayTimer = null;
+
+  function setStatus(msg, isError) {
+    statusBox.textContent = msg;
+    statusBox.classList.toggle('error', Boolean(isError));
+  }
+
+  function setButtons(on) {
+    startBtn.disabled = on;
+    stopBtn.disabled = !on;
+    langSel.disabled = on;
+  }
+
+  function show(original, translation) {
+    const delay = Math.max(0, Math.min(10000, Number($('delay').value) || 0));
+    clearTimeout(displayTimer);
+    displayTimer = setTimeout(function () {
+      translatedBox.textContent = translation;
+      originalBox.textContent = original;
+    }, delay);
+  }
+
+  function translate(text) {
+    const clean = String(text || '').trim();
+    if (!clean) return;
+    const lang = langSel.value.split('-')[0];
+
+    queue = queue.then(function () {
+      setStatus('Traduzindo…', false);
+      const url = API_URL + '?lang=' + encodeURIComponent(lang) +
+                  '&text=' + encodeURIComponent(clean);
+      return fetch(url)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.ok) throw new Error(data.error);
+          show(data.result.original, data.result.translation);
+          setStatus(listening ? 'Ouvindo…' : 'Tradução concluída.', false);
         });
+    }).catch(function (err) {
+      setStatus('Erro na tradução: ' + (err.message || err), true);
+    });
+  }
 
-      startMeterButton.addEventListener('click', startMeter);
-      stopMeterButton.addEventListener('click', () => {
-        stopMeter('Teste do microfone parado.');
-      });
+  function createRecognition() {
+    recognition = new SR();
+    recognition.lang = langSel.value;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
 
-      updateRecognitionButtons();
-    })();
-  </script>
+    recognition.onstart = function () {
+      listening = true; setButtons(true); setStatus('Ouvindo…', false);
+    };
+
+    recognition.onresult = function (event) {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        const t = (res[0] && res[0].transcript || '').trim();
+        if (!t) continue;
+        if (res.isFinal) translate(t); else interim += t + ' ';
+      }
+      interimBox.textContent = interim.trim();
+    };
+
+    recognition.onerror = function (event) {
+      const msgs = {
+        'not-allowed': 'Microfone bloqueado. Permita o acesso nas configurações do site.',
+        'service-not-allowed': 'Serviço de reconhecimento não permitido pelo navegador.',
+        'no-speech': 'Não detectei fala.',
+        'network': 'Problema de rede no reconhecimento.',
+        'audio-capture': 'Não foi possível acessar o microfone.',
+        'language-not-supported': 'Idioma não aceito pelo navegador.'
+      };
+      setStatus(msgs[event.error] || ('Erro: ' + event.error), true);
+      if (['not-allowed', 'service-not-allowed', 'audio-capture',
+           'language-not-supported'].indexOf(event.error) !== -1) {
+        listening = false; setButtons(false);
+      }
+    };
+
+    recognition.onend = function () {
+      if (listening) {
+        clearTimeout(restartTimer);
+        restartTimer = setTimeout(function () {
+          if (!listening) return;
+          try { recognition.start(); } catch (e) {}
+        }, 500);
+      } else {
+        setButtons(false);
+      }
+    };
+  }
+
+  startBtn.addEventListener('click', function () {
+    if (!SR) { setStatus('Navegador sem reconhecimento de fala. Use o Chrome atualizado.', true); return; }
+    if (API_URL.indexOf('COLE_AQUI') === 0) { setStatus('Falta colocar o endereço /exec no código.', true); return; }
+    try { createRecognition(); recognition.start(); }
+    catch (e) { setStatus('Não consegui iniciar o reconhecimento.', true); listening = false; setButtons(false); }
+  });
+
+  stopBtn.addEventListener('click', function () {
+    listening = false; clearTimeout(restartTimer);
+    if (recognition) { try { recognition.stop(); } catch (e) {} }
+    setButtons(false); interimBox.textContent = ''; setStatus('Microfone parado.', false);
+  });
+
+  $('clear').addEventListener('click', function () {
+    translatedBox.textContent = 'A tradução aparecerá aqui.';
+    originalBox.textContent = ''; interimBox.textContent = '';
+    clearTimeout(displayTimer);
+  });
+
+  $('color').addEventListener('input', function (e) {
+    document.documentElement.style.setProperty('--sub-color', e.target.value);
+  });
+
+  $('size').addEventListener('input', function (e) {
+    const s = Math.max(16, Math.min(60, Number(e.target.value) || 30));
+    $('sizeValue').textContent = String(s);
+    document.documentElement.style.setProperty('--sub-size', s + 'px');
+  });
+
+  $('position').addEventListener('change', function (e) {
+    const stage = $('stage');
+    stage.classList.remove('position-top', 'position-center', 'position-bottom');
+    stage.classList.add('position-' + e.target.value);
+  });
+
+  if (!SR) setStatus('Navegador sem reconhecimento de fala. Use o Chrome atualizado.', true);
+})();
+</script>
 </body>
 </html>
