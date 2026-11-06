@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Legendas traduzidas</title>
+
   <style>
     :root {
       color-scheme: dark;
@@ -17,7 +18,9 @@
       --sub-size: 30px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -58,9 +61,14 @@
       font-weight: 700;
     }
 
-    select, input, button { font: inherit; }
+    select,
+    input,
+    button {
+      font: inherit;
+    }
 
-    select, input[type="number"] {
+    select,
+    input[type="number"] {
       width: 100%;
       min-height: 42px;
       padding: 8px 10px;
@@ -114,7 +122,9 @@
       line-height: 1.45;
     }
 
-    #status.error { color: var(--danger); }
+    #status.error {
+      color: var(--danger);
+    }
 
     .stage {
       min-height: 230px;
@@ -126,9 +136,17 @@
       background: radial-gradient(ellipse at center, #273441 0%, #121b24 72%);
     }
 
-    .stage.position-top { align-items: flex-start; }
-    .stage.position-center { align-items: center; }
-    .stage.position-bottom { align-items: flex-end; }
+    .stage.position-top {
+      align-items: flex-start;
+    }
+
+    .stage.position-center {
+      align-items: center;
+    }
+
+    .stage.position-bottom {
+      align-items: flex-end;
+    }
 
     .box {
       width: 100%;
@@ -142,6 +160,13 @@
       line-height: 1.3;
       overflow-wrap: anywhere;
       text-shadow: 0 2px 4px #000;
+    }
+
+    /* O aviso tem tamanho próprio e não acompanha o tamanho da legenda. */
+    #placeholder {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.4;
     }
 
     #original {
@@ -164,10 +189,13 @@
     }
 
     @media (max-width: 560px) {
-      .controls { grid-template-columns: 1fr; }
+      .controls {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
+
 <body>
   <main>
     <h1>Legendas traduzidas</h1>
@@ -180,6 +208,16 @@
             <option value="en-US">Inglês</option>
             <option value="es-ES">Espanhol</option>
             <option value="ja-JP">Japonês</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="targetLanguage">Idioma da legenda</label>
+          <select id="targetLanguage">
+            <option value="pt">Português</option>
+            <option value="en">Inglês</option>
+            <option value="es">Espanhol</option>
+            <option value="ja">Japonês</option>
           </select>
         </div>
 
@@ -221,7 +259,8 @@
 
     <section id="stage" class="stage position-bottom">
       <div class="box">
-        <div id="translated" aria-live="polite">A tradução aparecerá aqui.</div>
+        <div id="translated" aria-live="polite"></div>
+        <div id="placeholder">A tradução aparecerá aqui.</div>
         <div id="original"></div>
         <div id="interim"></div>
       </div>
@@ -234,29 +273,34 @@
     (function () {
       'use strict';
 
-      const API_URL = 'https://script.google.com/macros/s/AKfycbyDkH296gsdx3hd7MOl4BIyWPNS86sts4OatoJJflZ6BnefZMroV_YG-IvCNtJWW49lKw/exec';
+      const API_URL =
+        'https://script.google.com/macros/s/AKfycbyDkH296gsdx3hd7MOl4BIyWPNS86sts4OatoJJflZ6BnefZMroV_YG-IvCNtJWW49lKw/exec';
 
       const $ = function (id) {
         return document.getElementById(id);
       };
 
       const langSel = $('language');
+      const targetSel = $('targetLanguage');
       const startBtn = $('start');
       const stopBtn = $('stop');
       const statusBox = $('status');
       const translatedBox = $('translated');
+      const placeholderBox = $('placeholder');
       const originalBox = $('original');
       const interimBox = $('interim');
 
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
       let recognition = null;
       let listening = false;
       let restartTimer = null;
       let queue = Promise.resolve();
       let displayTimer = null;
+      let requestNumber = 0;
 
-      function setStatus(msg, isError) {
-        statusBox.textContent = msg;
+      function setStatus(message, isError) {
+        statusBox.textContent = message;
         statusBox.classList.toggle('error', Boolean(isError));
       }
 
@@ -267,39 +311,114 @@
       }
 
       function show(original, translation) {
-        const delay = Math.max(0, Math.min(10000, Number($('delay').value) || 0));
+        const delay = Math.max(
+          0,
+          Math.min(10000, Number($('delay').value) || 0)
+        );
+
         clearTimeout(displayTimer);
 
         displayTimer = setTimeout(function () {
           translatedBox.textContent = translation;
+          placeholderBox.hidden = Boolean(translation);
           originalBox.textContent = original;
         }, delay);
+      }
+
+      function jsonp(params) {
+        return new Promise(function (resolve, reject) {
+          const callbackName =
+            'captionCallback_' + Date.now() + '_' + (++requestNumber);
+
+          const script = document.createElement('script');
+          let finished = false;
+
+          function cleanUp() {
+            clearTimeout(timeout);
+            script.onerror = null;
+            script.remove();
+
+            try {
+              delete window[callbackName];
+            } catch (e) {
+              window[callbackName] = undefined;
+            }
+          }
+
+          function finish(error, data) {
+            if (finished) return;
+            finished = true;
+            cleanUp();
+
+            if (error) {
+              reject(error);
+            } else {
+              resolve(data);
+            }
+          }
+
+          window[callbackName] = function (data) {
+            finish(null, data);
+          };
+
+          const query = new URLSearchParams({
+            lang: params.lang,
+            target: params.target,
+            text: params.text,
+            callback: callbackName,
+            _: String(Date.now())
+          });
+
+          script.async = true;
+          script.src = API_URL + '?' + query.toString();
+          script.onerror = function () {
+            finish(new Error(
+              'Não consegui acessar o serviço. Confira a publicação do Apps Script, o endereço e a conexão.'
+            ));
+          };
+
+          const timeout = setTimeout(function () {
+            finish(new Error(
+              'O serviço de tradução demorou demais para responder.'
+            ));
+          }, 30000);
+
+          document.head.appendChild(script);
+        });
       }
 
       function translate(text) {
         const clean = String(text || '').trim();
         if (!clean) return;
 
-        const lang = langSel.value.split('-')[0];
+        const sourceCode = langSel.value.split('-')[0];
+        const targetCode = targetSel.value;
 
         queue = queue.then(function () {
           setStatus('Traduzindo…', false);
 
-          const url = API_URL +
-            '?lang=' + encodeURIComponent(lang) +
-            '&text=' + encodeURIComponent(clean);
+          return jsonp({
+            lang: sourceCode,
+            target: targetCode,
+            text: clean
+          }).then(function (data) {
+            if (!data || !data.ok) {
+              throw new Error(
+                data && data.error ? data.error : 'Resposta inválida do serviço.'
+              );
+            }
 
-          return fetch(url)
-            .then(function (response) {
-              return response.json();
-            })
-            .then(function (data) {
-              if (!data.ok) throw new Error(data.error);
-              show(data.result.original, data.result.translation);
-              setStatus(listening ? 'Ouvindo…' : 'Tradução concluída.', false);
-            });
-        }).catch(function (err) {
-          setStatus('Erro na tradução: ' + (err.message || err), true);
+            show(data.result.original, data.result.translation);
+            setStatus(
+              listening ? 'Ouvindo…' : 'Tradução concluída.',
+              false
+            );
+          });
+        }).catch(function (error) {
+          setStatus(
+            'Erro na tradução: ' + (error.message || error),
+            true
+          );
         });
       }
 
@@ -321,7 +440,9 @@
 
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const result = event.results[i];
-            const text = (result[0] && result[0].transcript || '').trim();
+            const text = (
+              result[0] && result[0].transcript || ''
+            ).trim();
 
             if (!text) continue;
 
@@ -337,12 +458,18 @@
 
         recognition.onerror = function (event) {
           const messages = {
-            'not-allowed': 'Microfone bloqueado. Permita o acesso nas configurações do site.',
-            'service-not-allowed': 'Serviço de reconhecimento não permitido pelo navegador.',
-            'no-speech': 'Não detectei fala.',
-            'network': 'Problema de rede no reconhecimento.',
-            'audio-capture': 'Não foi possível acessar o microfone.',
-            'language-not-supported': 'Idioma não aceito pelo navegador.'
+            'not-allowed':
+              'Microfone bloqueado. Permita o acesso nas configurações do site.',
+            'service-not-allowed':
+              'Serviço de reconhecimento não permitido pelo navegador.',
+            'no-speech':
+              'Não detectei fala. Continue falando ou confira o microfone.',
+            'network':
+              'Problema de rede no reconhecimento de fala.',
+            'audio-capture':
+              'Não foi possível acessar o microfone.',
+            'language-not-supported':
+              'Idioma não aceito pelo navegador.'
           };
 
           setStatus(messages[event.error] || ('Erro: ' + event.error), true);
@@ -361,12 +488,14 @@
         recognition.onend = function () {
           if (listening) {
             clearTimeout(restartTimer);
+
             restartTimer = setTimeout(function () {
               if (!listening) return;
+
               try {
                 recognition.start();
               } catch (e) {
-                // O reconhecimento pode ainda estar encerrando.
+                // O navegador pode ainda estar encerrando o reconhecimento.
               }
             }, 500);
           } else {
@@ -377,7 +506,10 @@
 
       startBtn.addEventListener('click', function () {
         if (!SR) {
-          setStatus('Navegador sem reconhecimento de fala. Use o Chrome atualizado.', true);
+          setStatus(
+            'Navegador sem reconhecimento de fala. Use o Chrome atualizado.',
+            true
+          );
           return;
         }
 
@@ -409,30 +541,48 @@
       });
 
       $('clear').addEventListener('click', function () {
-        translatedBox.textContent = 'A tradução aparecerá aqui.';
+        translatedBox.textContent = '';
+        placeholderBox.hidden = false;
         originalBox.textContent = '';
         interimBox.textContent = '';
         clearTimeout(displayTimer);
       });
 
       $('color').addEventListener('input', function (event) {
-        document.documentElement.style.setProperty('--sub-color', event.target.value);
+        document.documentElement.style.setProperty(
+          '--sub-color',
+          event.target.value
+        );
       });
 
       $('size').addEventListener('input', function (event) {
-        const size = Math.max(16, Math.min(60, Number(event.target.value) || 30));
+        const size = Math.max(
+          16,
+          Math.min(60, Number(event.target.value) || 30)
+        );
+
         $('sizeValue').textContent = String(size);
-        document.documentElement.style.setProperty('--sub-size', size + 'px');
+        document.documentElement.style.setProperty(
+          '--sub-size',
+          size + 'px'
+        );
       });
 
       $('position').addEventListener('change', function (event) {
         const stage = $('stage');
-        stage.classList.remove('position-top', 'position-center', 'position-bottom');
+        stage.classList.remove(
+          'position-top',
+          'position-center',
+          'position-bottom'
+        );
         stage.classList.add('position-' + event.target.value);
       });
 
       if (!SR) {
-        setStatus('Navegador sem reconhecimento de fala. Use o Chrome atualizado.', true);
+        setStatus(
+          'Navegador sem reconhecimento de fala. Use o Chrome atualizado.',
+          true
+        );
       }
     })();
   </script>
