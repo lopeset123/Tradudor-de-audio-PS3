@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -133,7 +134,11 @@
       padding: 20px;
       border: 1px solid #30404e;
       border-radius: 12px;
-      background: radial-gradient(ellipse at center, #273441 0%, #121b24 72%);
+      background: radial-gradient(
+        ellipse at center,
+        #273441 0%,
+        #121b24 72%
+      );
     }
 
     .stage.position-top {
@@ -162,7 +167,7 @@
       text-shadow: 0 2px 4px #000;
     }
 
-    /* O aviso tem tamanho próprio e não acompanha o tamanho da legenda. */
+    /* O aviso mantém tamanho próprio, independente da fonte da legenda. */
     #placeholder {
       color: var(--muted);
       font-size: 16px;
@@ -227,7 +232,9 @@
         </div>
 
         <div>
-          <label for="size">Tamanho: <span id="sizeValue">30</span> px</label>
+          <label for="size">
+            Tamanho: <span id="sizeValue">30</span> px
+          </label>
           <input id="size" type="number" min="16" max="60" value="30">
         </div>
 
@@ -242,13 +249,22 @@
 
         <div>
           <label for="delay">Atraso da legenda (ms)</label>
-          <input id="delay" type="number" min="0" max="10000" step="250" value="0">
+          <input
+            id="delay"
+            type="number"
+            min="0"
+            max="10000"
+            step="250"
+            value="0"
+          >
         </div>
       </div>
 
       <div class="buttons">
         <button id="start" type="button">Iniciar microfone</button>
-        <button id="stop" class="secondary" type="button" disabled>Parar</button>
+        <button id="stop" class="secondary" type="button" disabled>
+          Parar
+        </button>
         <button id="clear" class="secondary" type="button">Limpar</button>
       </div>
 
@@ -266,7 +282,9 @@
       </div>
     </section>
 
-    <p class="small">Precisa de internet. Mantenha esta página em primeiro plano.</p>
+    <p class="small">
+      Precisa de internet. Mantenha esta página em primeiro plano.
+    </p>
   </main>
 
   <script>
@@ -274,7 +292,7 @@
       'use strict';
 
       const API_URL =
-        'https://script.google.com/macros/s/AKfycbyDkH296gsdx3hd7MOl4BIyWPNS86sts4OatoJJflZ6BnefZMroV_YG-IvCNtJWW49lKw/exec';
+        'https://script.google.com/macros/s/AKfycbzqLIdy1XOUPUD2t_W_CTKzorcpPk4eSQ9RIkymaFL9GAXMudshwFtwJho390cLyqn0kQ/exec';
 
       const $ = function (id) {
         return document.getElementById(id);
@@ -290,7 +308,8 @@
       const originalBox = $('original');
       const interimBox = $('interim');
 
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SR =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
 
       let recognition = null;
       let listening = false;
@@ -332,6 +351,7 @@
 
           const script = document.createElement('script');
           let finished = false;
+          let timeout;
 
           function cleanUp() {
             clearTimeout(timeout);
@@ -371,13 +391,14 @@
 
           script.async = true;
           script.src = API_URL + '?' + query.toString();
+
           script.onerror = function () {
             finish(new Error(
-              'Não consegui acessar o serviço. Confira a publicação do Apps Script, o endereço e a conexão.'
+              'Não consegui acessar o serviço. Confira o endereço, a publicação do Apps Script e a conexão.'
             ));
           };
 
-          const timeout = setTimeout(function () {
+          timeout = setTimeout(function () {
             finish(new Error(
               'O serviço de tradução demorou demais para responder.'
             ));
@@ -404,7 +425,9 @@
           }).then(function (data) {
             if (!data || !data.ok) {
               throw new Error(
-                data && data.error ? data.error : 'Resposta inválida do serviço.'
+                data && data.error
+                  ? data.error
+                  : 'Resposta inválida do serviço.'
               );
             }
 
@@ -472,7 +495,10 @@
               'Idioma não aceito pelo navegador.'
           };
 
-          setStatus(messages[event.error] || ('Erro: ' + event.error), true);
+          setStatus(
+            messages[event.error] || ('Erro: ' + event.error),
+            true
+          );
 
           if ([
             'not-allowed',
@@ -570,11 +596,13 @@
 
       $('position').addEventListener('change', function (event) {
         const stage = $('stage');
+
         stage.classList.remove(
           'position-top',
           'position-center',
           'position-bottom'
         );
+
         stage.classList.add('position-' + event.target.value);
       });
 
